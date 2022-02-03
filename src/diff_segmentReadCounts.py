@@ -215,12 +215,12 @@ def main(argv):
 	group.add_argument('-o', '--output', dest='output', type=str, metavar='',
 		help='Output prefix. Outputs one _readCounts.bed file per sample.')
 	args = parser.parse_args()
-	print args
+	print(args)
 
 	# --------------------------------------------------
 	# main routine
 	# --------------------------------------------------
-	print '\njob starting:', str(datetime.now().time())
+	print('\njob starting:', str(datetime.now().time()))
 
 	if not args.segments:
 		sys.stderr.write('EXIT: Please provide --segments')
@@ -256,12 +256,12 @@ def main(argv):
 			cond2bgminus[cond].append(args.bgminus[c])
 
 	# === get bedgraph for each segment ===
-	print '- getting read counts per bp for each gene', str(datetime.now().time())
+	print('- getting read counts per bp for each gene', str(datetime.now().time()))
 	# condSeg2cov = {}
 	for cond in cond2bgplus:
 		for b, bgplus in enumerate(cond2bgplus[cond]):
 			sample = os.path.splitext(os.path.basename(bgplus))[0]
-			print '  -> bedtools intersect:', cond, sample, str(datetime.now().time())
+			print('  -> bedtools intersect:', cond, sample, str(datetime.now().time()))
 
 			# get bedgraph for each segment
 			intersect = '_'.join([args.output, cond, sample, 'intersect.txt'])
@@ -270,7 +270,7 @@ def main(argv):
 			else:
 				bedgraph_per_gene_nss(args.segments, bgplus, intersect)
 
-			print '  - avg coverage per bp for each segment', str(datetime.now().time())
+			print('  - avg coverage per bp for each segment', str(datetime.now().time()))
 			get_seg2cov(intersect, cond, sample, outfile='_'.join([args.output, sample, cond + '_readCounts.bed']))
 
 			# remove temporary file
@@ -281,7 +281,7 @@ def main(argv):
 	# else:
 	#   sys.stderr.write('WARNING: could not remove directory ' + tmpdir + '\n')
 
-	print '\nfinished:', str(datetime.now().time())
+	print('\nfinished:', str(datetime.now().time()))
 
 
 # boilerplate

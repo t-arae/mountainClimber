@@ -152,12 +152,12 @@ def main(argv):
     group.add_argument('-v', '--verbose', dest='verbose', action='store_true',
                        help='Print progress.')
     args = parser.parse_args()
-    print args
+    print(args)
 
     # --------------------------------------------------
     # main routine
     # --------------------------------------------------
-    print '\njob starting:', str(datetime.now().time())
+    print('\njob starting:', str(datetime.now().time()))
 
     if not args.input:
         sys.stderr.write('EXIT: Please provide --input')
@@ -191,7 +191,7 @@ def main(argv):
             genes_kept[gene] = 1
 
     # === get segment coverage for each sample ===
-    print '- reading segment coverage', str(datetime.now().time())
+    print('- reading segment coverage', str(datetime.now().time()))
     seg2cov = {}
     samples = []
     for infile in args.input:
@@ -235,7 +235,7 @@ def main(argv):
         gene2cps[gene].append((np.mean(cov), np.var(cov), start, end, cplabel, condLabel, ind, ind_max))
 
     # === get relative usage for each UTR ===
-    print '- calculating relative usage', str(datetime.now().time())
+    print('- calculating relative usage', str(datetime.now().time()))
     o4 = open(stdout, 'w')
     o4.write('\t'.join(['Condition', 'Total genes', 'Total genes with > 3 segments', 'Total genes with change points: left end', 'Total genes with change points: right end', 'Total genes with all prxlCov != 0: left end', 'Total genes with all prxlCov != 0: right end']) + '\n')
 
@@ -259,17 +259,17 @@ def main(argv):
     for gene in gene2cps:
         gs, gstart, gend, chrom, strand_inferred = gene.split(':')
         gene2cps_tuple = gene2cps[gene]
-        cov_mean_list, cov_var_list, start_list, end_list, cplabel_list, condLabel_list, ind_list, ind_max_list = zip(*gene2cps_tuple)
+        cov_mean_list, cov_var_list, start_list, end_list, cplabel_list, condLabel_list, ind_list, ind_max_list = list(zip(*gene2cps_tuple))
         nsamples = len(samples)
 
         if args.verbose:
-            print 'gene', gene, ind_max_list[0]
-            print 'starts', start_list
-            print 'ends', end_list
-            print 'cplabels', cplabel_list
-            print 'condLabels', condLabel_list
-            print 'inds', ind_list
-            print 'cov_mean', cov_mean_list
+            print('gene', gene, ind_max_list[0])
+            print('starts', start_list)
+            print('ends', end_list)
+            print('cplabels', cplabel_list)
+            print('condLabels', condLabel_list)
+            print('inds', ind_list)
+            print('cov_mean', cov_mean_list)
 
         if gene not in count_cond_gene:
             count_cond_gene[gene] = 1
@@ -317,16 +317,16 @@ def main(argv):
                 cond_indices_left = [i for i, x in enumerate(condLabel_list_left) if args.condition in x and first_jxn_ind < i < last_jxn_ind and i not in indices_left]
                 cond_indices_right = [i for i, x in enumerate(condLabel_list_right) if args.condition in x and first_jxn_ind < i < last_jxn_ind and i not in indices_right]
                 if args.verbose:
-                    print 'cond_indices_left', cond_indices_left, [(cplabel_list_left[x], condLabel_list_left[x]) for x in cond_indices_left]
-                    print 'cond_indices_right', cond_indices_right, [(cplabel_list_right[x], condLabel_list_right[x]) for x in cond_indices_right]
+                    print('cond_indices_left', cond_indices_left, [(cplabel_list_left[x], condLabel_list_left[x]) for x in cond_indices_left])
+                    print('cond_indices_right', cond_indices_right, [(cplabel_list_right[x], condLabel_list_right[x]) for x in cond_indices_right])
 
                 if len(cond_indices_left) > 0 and cplabel_list_left[cond_indices_left[0]] != 'Junction':
                     if args.verbose:
-                        print 'add change point to left!', gene, cond_indices_left[0], cplabel_list_left[cond_indices_left[0]], condLabel_list_left[cond_indices_left[0]]
+                        print('add change point to left!', gene, cond_indices_left[0], cplabel_list_left[cond_indices_left[0]], condLabel_list_left[cond_indices_left[0]])
                     indices_left.append(cond_indices_left[0])
                 if len(cond_indices_right) > 0 and cplabel_list_right[cond_indices_right[-1]] != 'Junction':
                     if args.verbose:
-                        print 'add change point to right!', gene, cond_indices_right[-1], cplabel_list_right[cond_indices_right[-1]], condLabel_list_right[cond_indices_right[-1]]
+                        print('add change point to right!', gene, cond_indices_right[-1], cplabel_list_right[cond_indices_right[-1]], condLabel_list_right[cond_indices_right[-1]])
                     indices_right = [cond_indices_right[-1]] + indices_right
 
             # assign segments common to both ends to either end by checking whether it consecutively follows a segment at either end
@@ -334,44 +334,44 @@ def main(argv):
             if len(indices_common) != 0:
                 for x in indices_common:
                     if args.verbose:
-                        print gene
-                        print start_list
-                        print end_list
-                        print cplabel_list
-                        print 'l:', indices_left
-                        print 'r:', indices_right
-                        print 'c:', indices_common
+                        print(gene)
+                        print(start_list)
+                        print(end_list)
+                        print(cplabel_list)
+                        print('l:', indices_left)
+                        print('r:', indices_right)
+                        print('c:', indices_common)
 
                     if x == 0:
                         del indices_right[indices_right.index(x)]
                         if args.verbose:
-                            print 'del from right end:', x
+                            print('del from right end:', x)
                     elif x == len(start_list) - 1:
                         del indices_left[indices_left.index(x)]
                         if args.verbose:
-                            print 'del from left end:', x
+                            print('del from left end:', x)
                     else:
                         if indices_left.index(x) != 0 and indices_right.index(x) != len(indices_right) - 1:
                             if indices_left[indices_left.index(x) - 1] != x - 1 and indices_right[indices_right.index(x) + 1] == x + 1:
                                 if args.verbose:
-                                    print 'del from left:', x
+                                    print('del from left:', x)
                                 del indices_left[indices_left.index(x)]
                             elif indices_left[indices_left.index(x) - 1] == x - 1 and indices_right[indices_right.index(x) + 1] != x + 1:
                                 if args.verbose:
-                                    print 'del from right:', x
+                                    print('del from right:', x)
                                 del indices_right[indices_right.index(x)]
                             else:
                                 if indices_common.index(x) != 0 and indices_common[indices_common.index(x) - 1] != x - 1:
                                     del indices_left[indices_left.index(x)]
                                     if args.verbose:
-                                        print 'del from left common:', x, indices_common[indices_common.index(x) - 1], x - 1
+                                        print('del from left common:', x, indices_common[indices_common.index(x) - 1], x - 1)
                                 elif indices_common.index(x) != len(indices_common) - 1 and indices_common[indices_common.index(x) + 1] != x + 1:
                                     del indices_right[indices_right.index(x)]
                                     if args.verbose:
-                                        print 'del from right common:', x, indices_common[indices_common.index(x) + 1], x + 1
+                                        print('del from right common:', x, indices_common[indices_common.index(x) + 1], x + 1)
                                 else:
                                     if args.verbose:
-                                        print 'del from both:', x
+                                        print('del from both:', x)
                                     del indices_left[indices_left.index(x)]
                                     del indices_right[indices_right.index(x)]
                         else:
@@ -379,15 +379,15 @@ def main(argv):
                             sys.exit(1)
 
                 if args.verbose:
-                    print 'final l:', indices_left, [cplabel_list[x] for x in indices_left]
-                    print 'final r:', indices_right, [cplabel_list[x] for x in indices_right]
+                    print('final l:', indices_left, [cplabel_list[x] for x in indices_left])
+                    print('final r:', indices_right, [cplabel_list[x] for x in indices_right])
 
             if args.verbose:
-                print first_jxn_ind, last_jxn_ind
-                print 'indices_left', indices_left, [start_list[i] for i in indices_left], [end_list[i] for i in indices_left]
-                print 'indices_right', indices_right, [start_list[i] for i in indices_right], [end_list[i] for i in indices_right]
-                print [condLabel_list[i] for i in indices_left]
-                print [condLabel_list[i] for i in indices_right]
+                print(first_jxn_ind, last_jxn_ind)
+                print('indices_left', indices_left, [start_list[i] for i in indices_left], [end_list[i] for i in indices_left])
+                print('indices_right', indices_right, [start_list[i] for i in indices_right], [end_list[i] for i in indices_right])
+                print([condLabel_list[i] for i in indices_left])
+                print([condLabel_list[i] for i in indices_right])
 
         else:  # did not meet minimum # segments to check for all change points -> just keep distal ends
             indices_left = [0]
@@ -442,15 +442,15 @@ def main(argv):
         segs_left = [x for i, x in enumerate(segs_left) if i not in to_del_left]
 
         if args.verbose:
-            print '-> removed ambiguous segments:'
-            print 'segs_left_temp', segs_left_temp
-            print 'segs_right_temp', segs_right_temp
-            print segs_left
-            print segs_right
+            print('-> removed ambiguous segments:')
+            print('segs_left_temp', segs_left_temp)
+            print('segs_right_temp', segs_right_temp)
+            print(segs_left)
+            print(segs_right)
 
         # === calculate pi and write output ===
         if len(segs_left) == 0:
-            print 'NO LEFT SEG?'
+            print('NO LEFT SEG?')
             sys.exit(1)
         elif len(segs_left) == 1:
             ind = 'L0'
@@ -482,7 +482,7 @@ def main(argv):
 
             ru = calculate_relative_usage(seg_left2covlist, len(samples))  # , segs_left[-1][0])
             if args.verbose:
-                print 'ru left', ru
+                print('ru left', ru)
 
             segs_left_nonzeroRU = [x for i, x in enumerate(segs_left) if ru[i] != 0]
             nonzeroRU = [x for x in ru if x != 0]
@@ -493,7 +493,7 @@ def main(argv):
                 write_output_cp_left(o3, gene, this_seg, n=nsamples, ind=ind, ru=nonzeroRU[i])
 
         if len(segs_right) == 0:
-            print 'NO RIGHT SEG?'
+            print('NO RIGHT SEG?')
             sys.exit(1)
         elif len(segs_right) == 1:
             ind = 'R0'
@@ -527,7 +527,7 @@ def main(argv):
             ru = calculate_relative_usage(seg_right2covlist, len(samples))
             ru = ru[::-1]  # reverse: proximal -> distal order
             if args.verbose:
-                print 'ru right', ru
+                print('ru right', ru)
 
             segs_right_nonzeroRU = [x for i, x in enumerate(segs_right) if ru[i] != 0]
             nonzeroRU = [x for x in ru if x != 0]
@@ -539,7 +539,7 @@ def main(argv):
     o2.close()
     o3.close()
 
-    o4.write('\t'.join(map(str, [args.condition, len(count_cond_gene.keys()), len(count_cond_gene_3segments.keys()), len(count_cond_gene_cps['L'].keys()), len(count_cond_gene_cps['R'].keys()), len(count_cond_gene_min_prxlCov['L'].keys()), len(count_cond_gene_min_prxlCov['R'].keys())])) + '\n')
+    o4.write('\t'.join(map(str, [args.condition, len(list(count_cond_gene.keys())), len(list(count_cond_gene_3segments.keys())), len(list(count_cond_gene_cps['L'].keys())), len(list(count_cond_gene_cps['R'].keys())), len(list(count_cond_gene_min_prxlCov['L'].keys())), len(list(count_cond_gene_min_prxlCov['R'].keys()))])) + '\n')
 
     # sort bed files
     for file in [outfile_seg_cond, outfile_cp_cond]:
@@ -551,7 +551,7 @@ def main(argv):
     if os.path.isdir(args.output):
         os.rmdir(args.output)
 
-    print 'finished:', str(datetime.now().time())
+    print('finished:', str(datetime.now().time()))
 
 
 # boilerplate

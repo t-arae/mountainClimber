@@ -70,7 +70,7 @@ def read_infile(infile, gene2cp, cond, min_fc, min_expn, verbose_flag, lm_flag):
 					count_total += 1
 
 	if verbose_flag:
-		print count_fc_skipped, '/', count_total, round(float(count_fc_skipped) / float(count_total) * 100), ' % skipped with fold change <=', min_fc, infile
+		print(count_fc_skipped, '/', count_total, round(float(count_fc_skipped) / float(count_total) * 100), ' % skipped with fold change <=', min_fc, infile)
 	return gene2cp
 
 
@@ -126,16 +126,16 @@ def dbscan_each_condition(gene2cp, eps, minpts, ngene2cond_clustered, cond, ss_f
 	total_genes = 0
 	for gene in gene2cp:
 		if len(gene2cp[gene]) > 0:  # gene may not be expressed in this condition
-			cps, labels, ws, infiles, conds = zip(*sorted(gene2cp[gene]))
+			cps, labels, ws, infiles, conds = list(zip(*sorted(gene2cp[gene])))
 			if len(cps) == 0:
 				continue
 
 			# run dbscan
-			w = min(map(int, ws)) / 2 if eps == -1.0 else eps
+			w = min(list(map(int, ws))) / 2 if eps == -1.0 else eps
 			db2cps, db2labels, db2conds, db2condLabel = run_dbscan(w, minpts, cps, labels, infiles, conds)
 
 			# write output
-			if len(db2cps.keys()) > 0:
+			if len(list(db2cps.keys())) > 0:
 				if outfile_cp != 0:  # clustering diff_cluster output -> do not output
 					cp_med_list, cp_med2label = write_cp(gene, w, db2cps, db2labels, db2condLabel, o, ss_flag)
 				total_genes += 1
@@ -156,17 +156,17 @@ def dbscan_across_conditions(cond2cpfile, cond2gene2cp_all, ngene2cond_clustered
 	o = open(outfile_cp, 'w')
 	t = open(outfile_seg, 'w')
 
-	all_genes = set(list([x for y in cond2cpfile.keys() for x in sorted(cond2gene2cp_all[y].keys())]))
+	all_genes = set(list([x for y in list(cond2cpfile.keys()) for x in sorted(cond2gene2cp_all[y].keys())]))
 	for gene in all_genes:
 		if len(ngene2cond_clustered[gene]) >= min_conditions:
-			all_cps = [x for y in cond2cpfile.keys() for x in sorted(cond2gene2cp_all[y][gene])]
+			all_cps = [x for y in list(cond2cpfile.keys()) for x in sorted(cond2gene2cp_all[y][gene])]
 			if len(all_cps) == 0:
 				continue
 
-			cps, labels, ws, infiles, conds = zip(*all_cps)
+			cps, labels, ws, infiles, conds = list(zip(*all_cps))
 
 			# run dbscan
-			w = min(map(int, ws)) / 2 if eps == -1.0 else eps
+			w = min(list(map(int, ws))) / 2 if eps == -1.0 else eps
 			db2cps, db2labels, db2conds, db2condLabel = run_dbscan(w, min(cond2minpts.values()),
 				cps, labels, infiles, conds)
 
@@ -191,7 +191,7 @@ def dbscan_across_conditions(cond2cpfile, cond2gene2cp_all, ngene2cond_clustered
 				del db2labels[db]
 
 			# write output
-			if len(db2cps.keys()) > 0:
+			if len(list(db2cps.keys())) > 0:
 				cp_med_list, cp_med2label = write_cp(gene, w, db2cps, db2labels, db2condLabel, o, ss_flag)
 				write_seg(gene, w, cp_med_list, cp_med2label, t, ss_flag)
 
@@ -307,12 +307,12 @@ def main(argv):
 	args = parser.parse_args()
 
 	if args.verbose:
-		print args
+		print(args)
 
 	# --------------------------------------------------
 	# main routine
 	# --------------------------------------------------
-	print '\njob starting:', str(datetime.now().time())
+	print('\njob starting:', str(datetime.now().time()))
 
 	if not args.input:
 		sys.stderr.write('EXIT: Please provide --input')
@@ -348,21 +348,21 @@ def main(argv):
 			sys.exit(1)
 
 	# === (1) filter change points by fold change, (2) filter TUs by reproducibility ===
-	print '- reading input change point files', str(datetime.now().time())
+	print('- reading input change point files', str(datetime.now().time()))
 	cond2gene2cp_all = {}
 	cond2nGenes = {}
 	cond2nGenesFiltered = {}
 	for cond in sorted(cond2cpfile.keys()):
-		print '  -', cond, str(datetime.now().time())
+		print('  -', cond, str(datetime.now().time()))
 
 		# === get all change points with >= min_fc ===
 		gene2cp = defaultdict(list)
 		for cpfile in cond2cpfile[cond]:
 			gene2cp = read_infile(cpfile, gene2cp, cond, args.min_fc,
 				args.min_expn, args.verbose, args.lm_flag)
-		cond2nGenes[cond] = len(gene2cp.keys())  # count total genes
+		cond2nGenes[cond] = len(list(gene2cp.keys()))  # count total genes
 		if args.verbose:
-			print ' -> total genes:', len(gene2cp.keys())
+			print(' -> total genes:', len(list(gene2cp.keys())))
 
 		# === all genes across all conditions ===
 		cond2gene2cp_all[cond] = defaultdict(list)
@@ -370,12 +370,12 @@ def main(argv):
 			cond2gene2cp_all[cond][gene].extend(gene2cp[gene])
 
 	# === DBSCAN ===
-	print '- DBSCAN: in each condition', str(datetime.now().time())
+	print('- DBSCAN: in each condition', str(datetime.now().time()))
 	cond2ngenes_eachCondition = {}
 	ngene2cond_clustered = defaultdict(list)
 	for cond in sorted(cond2cpfile.keys()):
-		print '  -', cond, str(datetime.now().time())
-		if len(cond2cpfile.keys()) == 1:  # only one condition -> print output bed file
+		print('  -', cond, str(datetime.now().time()))
+		if len(list(cond2cpfile.keys())) == 1:  # only one condition -> print output bed file
 			ngene2cond_clustered, total_genes = dbscan_each_condition(cond2gene2cp_all[cond],
 				args.eps, cond2minpts[cond], ngene2cond_clustered, cond, args.ss_flag,
 				outfile_cp=outfile_cp)
@@ -388,8 +388,8 @@ def main(argv):
 		cond2ngenes_eachCondition[cond] = total_genes
 
 	# === dbscan across conditions: keep outliers ===
-	print '- DBSCAN: across conditions', str(datetime.now().time())
-	if len(cond2cpfile.keys()) > 1:
+	print('- DBSCAN: across conditions', str(datetime.now().time()))
+	if len(list(cond2cpfile.keys())) > 1:
 		cond2gene_clustered = dbscan_across_conditions(cond2cpfile, cond2gene2cp_all,
 			ngene2cond_clustered, args.min_conditions, args.eps, cond2minpts,
 			args.ss_flag, outfile_cp=outfile_cp, outfile_seg=outfile_seg)
@@ -404,7 +404,7 @@ def main(argv):
 			o.write('\t'.join(map(str, [cond, len(cond2cpfile[cond]), cond2minpts[cond], cond2nGenes[cond], cond2ngenes_eachCondition[cond], cond2gene_clustered[cond]])) + '\n')
 		o.close()
 	else:
-		print '  -> only one condition found'
+		print('  -> only one condition found')
 
 		# === print totals across conditions ===
 		o = open(outfile_summary, 'w')
@@ -417,7 +417,7 @@ def main(argv):
 	# === sort output ===
 	pb.BedTool(outfile_cp).sort().saveas(outfile_cp + '.sorted')
 	os.rename(outfile_cp + '.sorted', outfile_cp)
-	print '\nfinished:', str(datetime.now().time())
+	print('\nfinished:', str(datetime.now().time()))
 
 
 # boilerplate

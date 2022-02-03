@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 def run_command(cmd, stdin=0, stdoutfile=0, printflag=1):
 	"""run a subprocess"""
 	if printflag == 1:
-		print ' '.join(cmd)
+		print(' '.join(cmd))
 	if stdin == 0 and stdoutfile == 0:
 		p = Popen(cmd, stdout=PIPE, stderr=PIPE)
 		stdout, stderr = p.communicate()

@@ -82,7 +82,7 @@ def window_count(bedgraph, window_size):
 						(prev_count, prev_length, prev_start, prev_end) = window2count_length[(chrom, window_lower, window_upper)]
 						window2count_length[(chrom, window_lower, window_upper)] = (prev_count + total_count, prev_length + length, min(prev_start, start), max(prev_end, end))
 				else:  # region spans multiple windows
-					for window_start in xrange(window_lower, window_upper, window_size):
+					for window_start in range(window_lower, window_upper, window_size):
 						window_end = window_start + window_size
 
 						# get coverage
@@ -157,7 +157,7 @@ def merge_windows(window2count_length, min_percent, min_reads, bedgraph, outfile
 		with open(outfile_extend, 'r') as f:
 			for line in f:
 				(tchrom, tstart, tend, tname, bchrom, bstart, bend, bcov) = line.rstrip().split('\t')
-				bstart, bend = map(int, [bstart, bend])
+				bstart, bend = list(map(int, [bstart, bend]))
 
 				if (tchrom, tstart, tend) not in tx2start:
 					tx2start[(tchrom, tstart, tend)] = bstart
@@ -216,7 +216,7 @@ def main(argv):
 	# --------------------------------------------------
 	# main routine
 	# --------------------------------------------------
-	print '\njob starting:', str(datetime.now().time())
+	print('\njob starting:', str(datetime.now().time()))
 
 	if not args.output:
 		sys.stderr.write('EXIT: please enter --output')
@@ -229,7 +229,7 @@ def main(argv):
 	# === calculate window read counts. incorporate introns if --junc provided. ===
 	if args.junc:
 		if re.search(r'\.bed$', args.junc):
-			print '- converting junction .bed file to .bedgraph', str(datetime.now().time())
+			print('- converting junction .bed file to .bedgraph', str(datetime.now().time()))
 
 			# --- get overlapping junction regions ---
 			temp_jxn_intersect = args.output + '.temp.junction.intersect.txt'
@@ -293,7 +293,7 @@ def main(argv):
 			sys.exit(1)
 
 		# combine bedgraphs: using subprocess because pybedtools complains about unionbedg format not being bed
-		print '- merging junctions with bedgraph', str(datetime.now().time())
+		print('- merging junctions with bedgraph', str(datetime.now().time()))
 		outfile_temp_unionbg = args.output + '.unionbedg'
 		j = open(outfile_temp_unionbg, 'w')
 		cmd = ['bedtools', 'unionbedg', '-i', args.bedgraph, outfile_temp_jxn_bg]
@@ -313,25 +313,25 @@ def main(argv):
 				m.write('\t'.join(map(str, [chrom, start, end, int(count1) + int(count2)])) + '\n')
 		m.close()
 
-		print '- calculating window read counts:', str(datetime.now().time())
+		print('- calculating window read counts:', str(datetime.now().time()))
 		window2count_length, chr2starts, chr2ends = window_count(outfile_temp_merge_bg_jxn, args.window_size)
 	else:
 		sys.stderr.write('No --junc file was input. It is recommended to include this input.')
 
-		print '- calculating window read counts:', str(datetime.now().time())
+		print('- calculating window read counts:', str(datetime.now().time()))
 		window2count_length, chr2starts, chr2ends = window_count(args.bedgraph, args.window_size)
 		outfile_temp_merge_bg_jxn = args.bedgraph
 
-	print '  ->', len(window2count_length.keys()), 'total windows', str(datetime.now().time())
+	print('  ->', len(list(window2count_length.keys())), 'total windows', str(datetime.now().time()))
 
 	# === merge consecutive windows ===
-	print '- merging consecutive windows:', str(datetime.now().time())
+	print('- merging consecutive windows:', str(datetime.now().time()))
 	outfile_temp_windows = args.output + '.windows'
 	outfile_temp_bg_merged = args.output + '.bg.merged'
 	transcripts_trimmed = merge_windows(window2count_length, args.min_percent, args.min_reads, outfile_temp_merge_bg_jxn, outfile_temp_bg_merged, outfile_temp_windows)
 
 	if transcripts_trimmed != 0:
-		print '  ->', len(transcripts_trimmed.keys()), 'total transcripts after merging'
+		print('  ->', len(list(transcripts_trimmed.keys())), 'total transcripts after merging')
 
 		# === get strand ===
 		if args.strand == 1:
@@ -341,11 +341,11 @@ def main(argv):
 		elif args.strand == 0:
 			strand = 0
 		else:
-			print 'DIED: did not recognize strand', args.strand
+			print('DIED: did not recognize strand', args.strand)
 			sys.exit()
 
 		# === print output -> unsorted bed format ===
-		print "printing output (unsorted): " + str(datetime.now().time())
+		print("printing output (unsorted): " + str(datetime.now().time()))
 		transcripts_trimmed_list = list(sorted(transcripts_trimmed.keys()))
 		output_temp = args.output + '.temp'
 		o = open(output_temp, 'w')
@@ -371,7 +371,7 @@ def main(argv):
 		os.remove(outfile_temp_unionbg)
 		os.remove(outfile_temp_merge_bg_jxn)
 
-	print '\nfinished: ' + str(datetime.now().time())
+	print('\nfinished: ' + str(datetime.now().time()))
 
 
 # boilerplate

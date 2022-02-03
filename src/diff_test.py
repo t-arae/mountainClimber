@@ -46,8 +46,8 @@ def read_input(infile):
 				label, gs, gstart, gend, gchrom, gstrand_inferred, cov_mean, cov_var, nsample, ind = name.split(':')
 				ind_side = ind[0]
 				ind_num = int(ind[1:])
-				seg_start, seg_end = map(int, [seg_start, seg_end])
-				cov_mean, ru = map(float, [cov_mean, ru])
+				seg_start, seg_end = list(map(int, [seg_start, seg_end]))
+				cov_mean, ru = list(map(float, [cov_mean, ru]))
 				gene = ':'.join([gs, gstart, gend, chrom, gstrand_inferred])
 				if ind_side == 'L':
 					gene2seg_left[gene].append((seg_start, seg_end, label, cov_mean, ru, ind))
@@ -64,7 +64,7 @@ def read_input(infile):
 
 	# get proximal & distal: left = proximal before distal
 	for gene in gene2seg_left:
-		cstart_list, cend_list, label_list, cov_mean_list, ru_list, ind_list = zip(*sorted(gene2seg_left[gene]))
+		cstart_list, cend_list, label_list, cov_mean_list, ru_list, ind_list = list(zip(*sorted(gene2seg_left[gene])))
 		if len(label_list) == 1:
 			label = label_list[0].split('|')[0]
 			cp_start = cstart_list[0] - 1
@@ -88,7 +88,7 @@ def read_input(infile):
 
 	# get proximal & distal: left = proximal before distal
 	for gene in gene2seg_right:
-		cstart_list, cend_list, label_list, cov_mean_list, ru_list, ind_list = zip(*gene2seg_right[gene])
+		cstart_list, cend_list, label_list, cov_mean_list, ru_list, ind_list = list(zip(*gene2seg_right[gene]))
 		if len(label_list) == 1:
 			cp_start = cend_list[0] - 1
 			cp_end = cend_list[0]
@@ -210,12 +210,12 @@ def main(argv):
 	group.add_argument('-v', '--verbose', dest='verbose', action='store_true',
 		help='Print progress.')
 	args = parser.parse_args()
-	print args
+	print(args)
 
 	# --------------------------------------------------
 	# main routine
 	# --------------------------------------------------
-	print '\njob starting:', str(datetime.now().time())
+	print('\njob starting:', str(datetime.now().time()))
 
 	if not args.output:
 		sys.stderr.write('EXIT: Please provide --output')
@@ -238,7 +238,7 @@ def main(argv):
 
 	# === get segment coverage for each sample ===
 	if len(args.ru_segments) >= 2: # if only one RU segment input, don't need to re-calculate read counts for the segments. in this case, we just label tandem vs. alternative first/last exon
-		print '- reading segment coverage', str(datetime.now().time())
+		print('- reading segment coverage', str(datetime.now().time()))
 		seg2cov = {}
 		samples = []
 		cond2samples = defaultdict(list)
@@ -246,7 +246,7 @@ def main(argv):
 			sample = os.path.basename(args.input[c]).replace('_readCounts.bed', '')
 			samples.append(sample)
 			cond2samples[cond].append(sample)
-			print args.input[c], sample
+			print(args.input[c], sample)
 			seg2cov = get_seg2cov(args.input[c], sample, seg2cov)
 
 	# --------------------------------------------------
@@ -267,8 +267,8 @@ def main(argv):
 		o5 = open(file_test, 'w')
 		o5.write('cp\tgene\ttest_type\tside\tseg_prxl\tseg_dstl\tru_dif\tru_prxla\tru_prxlb\tru_dstla\tru_dstlb\tmean_a\tmean_b\tcv2_a\tcv2_b\tnsamples_a\tnsamples_b\n')
 
-		samplesa = cond2samples[cond2samples.keys()[0]]
-		samplesb = cond2samples[cond2samples.keys()[1]]
+		samplesa = cond2samples[list(cond2samples.keys())[0]]
+		samplesb = cond2samples[list(cond2samples.keys())[1]]
 
 		tested_count = 0
 		total_cp = 0
@@ -280,31 +280,31 @@ def main(argv):
 		total_cp_strictly_decreasing_filtered = 0
 
 		gene2diffcp = defaultdict(list)
-		for (cp_start, cp_end, label, gene) in sorted(list(set(cp2dstla.keys() + cp2dstlb.keys()))):
+		for (cp_start, cp_end, label, gene) in sorted(list(set(list(cp2dstla.keys()) + list(cp2dstlb.keys())))):
 			total_cp += 1
 			chrom = gene.split(':')[3]
 			strand = gene.split(':')[-1]
 
 			if args.verbose:
-				print cp_start, cp_end, label, gene
+				print(cp_start, cp_end, label, gene)
 
 			# === get prxl/dstl info and coverage in each condition ===
 			if (cp_start, cp_end, label, gene) in cp2prxla:
 				side_prxla, cstart_prxla, cend_prxla, cov_mean_prxla, ru_prxla, label_prxla = cp2prxla[(cp_start, cp_end, label, gene)]
 				if args.verbose:
-					print 'prxla', side_prxla, cstart_prxla, cend_prxla, cov_mean_prxla, ru_prxla
+					print('prxla', side_prxla, cstart_prxla, cend_prxla, cov_mean_prxla, ru_prxla)
 			if (cp_start, cp_end, label, gene) in cp2prxlb:
 				side_prxlb, cstart_prxlb, cend_prxlb, cov_mean_prxlb, ru_prxlb, label_prxlb = cp2prxlb[(cp_start, cp_end, label, gene)]
 				if args.verbose:
-					print 'prxlb', side_prxlb, cstart_prxlb, cend_prxlb, cov_mean_prxlb, ru_prxlb
+					print('prxlb', side_prxlb, cstart_prxlb, cend_prxlb, cov_mean_prxlb, ru_prxlb)
 			if (cp_start, cp_end, label, gene) in cp2dstla:
 				side_dstla, cstart_dstla, cend_dstla, cov_mean_dstla, ru_dstla, label_dstla = cp2dstla[(cp_start, cp_end, label, gene)]
 				if args.verbose:
-					print 'dstla', side_dstla, cstart_dstla, cend_dstla, cov_mean_dstla, ru_dstla
+					print('dstla', side_dstla, cstart_dstla, cend_dstla, cov_mean_dstla, ru_dstla)
 			if (cp_start, cp_end, label, gene) in cp2dstlb:
 				side_dstlb, cstart_dstlb, cend_dstlb, cov_mean_dstlb, ru_dstlb, label_dstlb = cp2dstlb[(cp_start, cp_end, label, gene)]
 				if args.verbose:
-					print 'dstlb', side_dstlb, cstart_dstlb, cend_dstlb, cov_mean_dstlb, ru_dstlb
+					print('dstlb', side_dstlb, cstart_dstlb, cend_dstlb, cov_mean_dstlb, ru_dstlb)
 
 			# === get differential change points ===
 			if (cp_start, cp_end, label, gene) in cp2dstla:
@@ -324,20 +324,20 @@ def main(argv):
 
 							if (side_prxla[0] == 'L' and cstart_prxla != cend_dstla) or (side_prxla[0] == 'R' and cend_prxla != cstart_dstla) or (side_prxlb[0] == 'L' and cstart_prxlb != cend_dstlb) or (side_prxlb[0] == 'R' and cend_prxlb != cstart_dstlb):
 								if args.verbose:
-									print '-> change point in both A & B: not consecutive'
+									print('-> change point in both A & B: not consecutive')
 
 								test_type = get_test_type(strand, side_prxla[0], 'AE')
-								gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+								gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 									test_type, side_prxla,
 									str(cstart_prxla) + '-' + str(cend_prxla),
 									str(cstart_dstla) + '-' + str(cend_dstla),
 									float(ru_prxla) - float(ru_prxlb),
-									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 
 							else:
 								# === test ===
 								if args.verbose:
-									print '-> change point in both A & B: test', cov_mean_dstla, cov_mean_dstlb
+									print('-> change point in both A & B: test', cov_mean_dstla, cov_mean_dstlb)
 								cov_prxla_list = [seg2cov.get((gene, chrom, str(cstart_prxla), str(cend_prxla), strand, sample), 0.0) for sample in samplesa]
 								cov_prxlb_list = [seg2cov.get((gene, chrom, str(cstart_prxlb), str(cend_prxlb), strand, sample), 0.0) for sample in samplesb]
 								cov_dstla_list = [seg2cov.get((gene, chrom, str(cstart_dstla), str(cend_dstla), strand, sample), 0.0) for sample in samplesa]
@@ -366,16 +366,16 @@ def main(argv):
 							test_type = get_test_type(strand, side_prxla[0], 'AE')
 							ru_prxlb = 'NA'
 							if args.verbose:
-								print '-> change point in A, distal or non-consecutive in B' # use distal/proximal coordinates from A only
+								print('-> change point in A, distal or non-consecutive in B') # use distal/proximal coordinates from A only
 							if (side_prxla[0] == 'L' and cstart_prxla != cend_dstla) or (side_prxla[0] == 'R' and cend_prxla != cstart_dstla):
 								if args.verbose:
-									print '-> change point in A, distal in B: not consecutive'
-								gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+									print('-> change point in A, distal in B: not consecutive')
+								gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 									test_type, side_prxla,
 									str(cstart_prxlb) + '-' + str(cend_prxlb),
 									str(cstart_dstlb) + '-' + str(cend_dstlb),
 									'NA',
-									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 							else:
 								# === test ===
 								cov_prxla_list = [seg2cov.get((gene, chrom, str(cstart_prxla), str(cend_prxla), strand, sample), 0.0) for sample in samplesa]
@@ -407,16 +407,16 @@ def main(argv):
 						if gene in gene2dstlb:
 							if (side_prxla[0] == 'L' and cstart_prxla != cend_dstla) or (side_prxla[0] == 'R' and cend_prxla != cstart_dstla):
 								if args.verbose:
-									print '-> change point in A, not in B: not consectuive ==> distal in A only'
-								gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+									print('-> change point in A, not in B: not consectuive ==> distal in A only')
+								gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 									test_type, side_prxla,
 									str(cstart_prxla) + '-' + str(cend_prxla),
 									str(cstart_dstla) + '-' + str(cend_dstla),
 									'NA',
-									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 							else:
 								if args.verbose:
-									print '-> change point in A, not in B: test'
+									print('-> change point in A, not in B: test')
 								cov_prxla_list = [seg2cov.get((gene, chrom, str(cstart_prxla), str(cend_prxla), strand, sample), 0.0) for sample in samplesa]
 								cov_prxlb_list = [seg2cov.get((gene, chrom, str(cstart_prxla), str(cend_prxla), strand, sample), 0.0) for sample in samplesb]
 								cov_dstla_list = [seg2cov.get((gene, chrom, str(cstart_dstla), str(cend_dstla), strand, sample), 0.0) for sample in samplesa]
@@ -438,17 +438,17 @@ def main(argv):
 											len(samplesa), len(samplesb)])) + '\n')
 									elif dstl_prxl_a != 'NA':
 										if args.verbose:
-											print '--> print to output separately'
-										gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+											print('--> print to output separately')
+										gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 											test_type, side_prxla,
 											str(cstart_prxla) + '-' + str(cend_prxla),
 											str(cstart_dstla) + '-' + str(cend_dstla),
 											'NA',
-											ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+											ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 								else:
 									total_cp_min_dstlCov_filtered += 1
 						elif args.verbose:
-							print '-> change point in A, not in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT'
+							print('-> change point in A, not in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT')
 				else:
 					ru_prxla = 'NA'
 					if (cp_start, cp_end, label, gene) in cp2dstlb:
@@ -456,16 +456,16 @@ def main(argv):
 							test_type = get_test_type(strand, side_prxlb[0], 'AE')
 							if (side_prxlb[0] == 'L' and cstart_prxlb != cend_dstlb) or (side_prxlb[0] == 'R' and cend_prxlb != cstart_dstlb):
 								if args.verbose:
-									print '-> change point in B, distal in A: not consecutive'
-								gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+									print('-> change point in B, distal in A: not consecutive')
+								gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 									test_type, side_prxlb,
 									str(cstart_prxlb) + '-' + str(cend_prxlb),
 									str(cstart_dstlb) + '-' + str(cend_dstlb),
 									'NA',
-									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 							else:
 								if args.verbose:
-									print '-> change point in B, distal in A' # use distal/proximal coordinates from B only
+									print('-> change point in B, distal in A') # use distal/proximal coordinates from B only
 								# === test ===
 								cov_prxla_list = [seg2cov.get((gene, chrom, str(cstart_prxlb), str(cend_prxlb), strand, sample), 0.0) for sample in samplesa]
 								cov_prxlb_list = [seg2cov.get((gene, chrom, str(cstart_prxlb), str(cend_prxlb), strand, sample), 0.0) for sample in samplesb]
@@ -474,15 +474,15 @@ def main(argv):
 
 								for sample in samplesa:
 									if (gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample) in seg2cov:
-										print '-> cov a:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample, seg2cov[(gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)]
+										print('-> cov a:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample, seg2cov[(gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)])
 									else:
-										print '-> none a!:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample
+										print('-> none a!:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)
 
 								for sample in samplesb:
 									if (gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample) in seg2cov:
-										print '-> cov b:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample, seg2cov[(gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)]
+										print('-> cov b:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample, seg2cov[(gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)])
 									else:
-										print '-> none b!:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample
+										print('-> none b!:', gene, chrom, str(cstart_dstlb), str(cend_dstlb), strand, sample)
 
 								if any(x >= args.min_dstlCov for x in [np.mean(cov_dstla_list), np.mean(cov_dstlb_list)]) and all (x >= args.min_prxlCov for x in [np.mean(cov_prxla_list), np.mean(cov_prxlb_list)]):
 									cov_mean_dstla_scaled, cov_mean_dstlb_scaled, dstl_prxl_a, dstl_prxl_b, cv2a, cv2b, total_cp_min_dstlCov, total_cp_nonzero_prxl, total_cp_nonzero_prxl_filtered, total_cp_strictly_decreasing, total_cp_strictly_decreasing_filtered = test_diffl_cp(cov_prxla_list, cov_dstla_list, cov_prxlb_list, cov_dstlb_list,
@@ -501,24 +501,24 @@ def main(argv):
 								else:
 									total_cp_min_dstlCov_filtered += 1
 						elif args.verbose:
-							print '-> distal in both A & B: not differential: DO NOT OUTPUT (there may be other tandem change points proximal of this distal point'
+							print('-> distal in both A & B: not differential: DO NOT OUTPUT (there may be other tandem change points proximal of this distal point')
 					else:
 						ru_prxlb = 'NA'
 						ru_dstlb = 'NA'
 						test_type = get_test_type(strand, side_dstla[0], 'AE')
 						if gene in gene2dstlb:
 							if args.verbose:
-								print '--> distal only in A, not in B: change point distal in one condition but not the other: output'
+								print('--> distal only in A, not in B: change point distal in one condition but not the other: output')
 							dstl_prxl_a = 'NA'
 							dstl_prxl_b = 'NA'
-							gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+							gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 								test_type, side_dstla,
 								'NA',
 								str(cstart_dstla) + '-' + str(cend_dstla),
 								'NA',
-								ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+								ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 						elif args.verbose:
-							print '--> distal in A, not in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT'
+							print('--> distal in A, not in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT')
 			else:
 				ru_prxla = 'NA'
 				ru_dstla = 'NA'
@@ -528,18 +528,18 @@ def main(argv):
 						if gene in gene2dstla:
 							if (side_prxlb[0] == 'L' and cstart_prxlb != cend_dstlb) or (side_prxlb[0] == 'R' and cend_prxlb != cstart_dstlb):
 								if args.verbose:
-									print '-> not in A, change point in B: not consecutive ==> distal in B only'
+									print('-> not in A, change point in B: not consecutive ==> distal in B only')
 								dstl_prxl_b = 'NA'
 								dstl_prxl_a = 'NA'
-								gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+								gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 									test_type, side_prxlb,
 									str(cstart_prxlb) + '-' + str(cend_prxlb),
 									str(cstart_dstlb) + '-' + str(cend_dstlb),
 									'NA',
-									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+									ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 							else:
 								if args.verbose:
-									print '-> not in A, change point in B: test'
+									print('-> not in A, change point in B: test')
 								# === test ===
 								cov_prxla_list = [seg2cov.get((gene, chrom, str(cstart_prxlb), str(cend_prxlb), strand, sample), 0.0) for sample in samplesa]
 								cov_prxlb_list = [seg2cov.get((gene, chrom, str(cstart_prxlb), str(cend_prxlb), strand, sample), 0.0) for sample in samplesb]
@@ -562,45 +562,45 @@ def main(argv):
 											len(samplesa), len(samplesb)])) + '\n')
 
 									elif dstl_prxl_b != 'NA':
-										gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+										gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 											test_type, side_prxlb,
 											str(cstart_prxlb) + '-' + str(cend_prxlb),
 											str(cstart_dstlb) + '-' + str(cend_dstlb),
 											'NA',
-											ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+											ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 						elif args.verbose:
-							print '--> not in A, change point in B: gene not expressed or all change points were noise in A. DO NOT OUTPUT'
+							print('--> not in A, change point in B: gene not expressed or all change points were noise in A. DO NOT OUTPUT')
 					else:
 						ru_prxlb = 'NA'
 						if gene in gene2dstla:
 							if args.verbose:
-								print '--> not in A, distal only in B: change point distal in one condition but not the other: output (e.g. HEPH)'
+								print('--> not in A, distal only in B: change point distal in one condition but not the other: output (e.g. HEPH)')
 							dstl_prxl_b = 'NA'
 							dstl_prxl_a = 'NA'
 							test_type = get_test_type(strand, side_dstlb[0], 'AE')
-							gene2diffcp[gene].append(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
+							gene2diffcp[gene].append(list(map(str, [':'.join(map(str, [label, chrom, cp_start, cp_end])),
 								test_type, side_dstlb,
 								'NA',
 								str(cstart_dstlb) + '-' + str(cend_dstlb),
 								'NA',
-								ru_prxla, ru_prxlb, ru_dstla, ru_dstlb]))
+								ru_prxla, ru_prxlb, ru_dstla, ru_dstlb])))
 						elif args.verbose:
-							print '--> not in A, distal only in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT'
+							print('--> not in A, distal only in B: gene not expressed or all change points were noise in B. DO NOT OUTPUT')
 				else:
-					print '-> not in A or B'
+					print('-> not in A or B')
 					sys.exit(1)
 		o5.close()
 
 		# run differential expression test
 		if tested_count == 0:
-			print '-> no change points tested!'
+			print('-> no change points tested!')
 		else:
-			print '- differential expression test:'
+			print('- differential expression test:')
 			rscript = os.path.join(os.path.dirname(functions.__file__), 'diff_test.R')
-			cmd = map(str, ['Rscript', '--vanilla', rscript, file_test, args.output, args.pmax, args.dtop_abs_dif_min])
+			cmd = list(map(str, ['Rscript', '--vanilla', rscript, file_test, args.output, args.pmax, args.dtop_abs_dif_min]))
 			stdout, stderr = run_command(cmd)
-			print stderr
-			print stdout
+			print(stderr)
+			print(stdout)
 
 			total_pmax = ''
 			total_pmax_difmin = ''
@@ -686,7 +686,7 @@ def main(argv):
 			o6.close()
 			o7.close()
 
-			print dtop_abs_dif_min_count, 'total cp with abs(RUa - RUb) >=', args.dtop_abs_dif_min
+			print(dtop_abs_dif_min_count, 'total cp with abs(RUa - RUb) >=', args.dtop_abs_dif_min)
 	else:
 		sys.stderr.write('EXIT: please input two conditions\n')
 		sys.exit(1)
@@ -696,7 +696,7 @@ def main(argv):
 		for file in [landmarker_test_file, file_test]:
 			os.remove(file)
 
-	print 'finished:', str(datetime.now().time())
+	print('finished:', str(datetime.now().time()))
 
 # boilerplate
 if __name__ == '__main__':
