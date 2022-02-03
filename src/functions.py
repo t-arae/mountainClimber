@@ -43,5 +43,5 @@ def sort_bedfile(infile, outfile):
 	o.write('track name=\"' + os.path.basename(infile).replace('.bed', '') + '\"\n')
 	cmd = ['sort', '-k1,1', '-k2,2n', infile]
 	stdout, stderr = run_command(cmd)
-	o.write(stdout)
+	o.write(stdout.decode("utf-8"))
 	o.close()
