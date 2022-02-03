@@ -75,7 +75,7 @@ def make_intron_bed(bam_file, outfile, overhang, min_intron, max_intron, strande
 	os.system('cat %s.tmp | sort -k1,1 -k2,2n > %s' %(outfile, outfile))
 	os.system('rm  %s.tmp' %(outfile))
 	# To run separate chromosomes at the time or all at once
-	chrm_number = list(set(zip(*list(junctions_idme.values()))[0]))
+	chrm_number = list(set(list(junctions_idme.values())[0]))
 
 	if len(chrm_number) == 1 : return chrm_number[0], strnd1
 	elif len(chrm_number) > 1: return 'all', strnd1
